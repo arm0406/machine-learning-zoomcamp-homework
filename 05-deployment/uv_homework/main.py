@@ -1,26 +1,19 @@
-def main():
-    print("Hello from uv-homework!")
-
-
-if __name__ == "__main__":
-    main()
-
-from fastapi import FastAPI
-app = FastAPI()
-
+import pickle
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-app = FastAPI()
+with open('pipeline_v1.bin', 'rb') as f:
+    model = pickle.load(f)
 
 class Client(BaseModel):
     lead_source: str
     number_of_courses_viewed: int
     annual_income: float
 
+app = FastAPI()
+
 @app.post("/")
-def predict_subscription(client: Client):
-    # Example scoring (replace this logic with your real model)
-    # Here is a dummy probability calculation:
-    prob = 0.334 if client.lead_source == "organic_search" else 0.534
-    return {"subscription_probability": prob}
+def predict(client: Client):
+    x = [client.dict()]
+    proba = model.predict_proba(x)[0, 1]
+    return {"subscription_probability": proba}
